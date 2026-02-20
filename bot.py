@@ -3,6 +3,7 @@ import os
 from telebot import types
 
 TOKEN = os.environ.get("TOKEN")
+OWNER_ID = 7415299809
 bot = telebot.TeleBot(TOKEN)
 
 def main_menu():
@@ -41,11 +42,27 @@ def prices(message):
 
 @bot.message_handler(func=lambda message: message.text == "📅 Записаться")
 def book(message):
+    msg = bot.send_message(message.chat.id,
+    "Напишите ваше имя и желаемое время.\n\n"
+    "Например: Анна, пятница 15:00",
+    reply_markup=types.ReplyKeyboardRemove())
+    bot.register_next_step_handler(msg, process_booking)
+
+def process_booking(message):
+    client_name = message.from_user.first_name
+    client_username = f"@{message.from_user.username}" if message.from_user.username else "без username"
+    booking_text = message.text
+
+    # Уведомление владельцу
+    bot.send_message(OWNER_ID,
+    f"🔔 Новая запись!\n\n"
+    f"👤 Клиент: {client_name} ({client_username})\n"
+    f"📝 Запрос: {booking_text}")
+
+    # Ответ клиенту
     bot.send_message(message.chat.id,
-    "Для записи напишите нам:\n\n"
-    "📱 WhatsApp: +33 6 xx xx xx xx\n"
-    "📞 Телефон: +33 6 xx xx xx xx\n\n"
-    "Или напишите сюда имя и желаемое время — мы свяжемся с вами!",
+    "Спасибо! Ваша заявка принята ✅\n\n"
+    "Мы свяжемся с вами в ближайшее время для подтверждения.",
     reply_markup=main_menu())
 
 @bot.message_handler(func=lambda message: message.text == "📍 Адрес и часы")
