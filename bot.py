@@ -249,10 +249,6 @@ def handle_callback(call):
         "Пожалуйста запишитесь на другое время.")
 
     bot.answer_callback_query(call.id)
-
-@bot.message_handler(func=lambda message: True)
-def echo(message):
-    bot.send_message(message.chat.id, "Нажми кнопку в меню 😊", reply_markup=main_menu())
     
 @bot.message_handler(commands=['admin'])
 def admin_panel(message):
@@ -282,6 +278,9 @@ def admin_panel(message):
         f"📅 {b[6]} в {b[7]}\n"
         f"Статус: {status}",
         reply_markup=markup)
+        @bot.message_handler(func=lambda message: True)
+        def echo(message):
+            bot.send_message(message.chat.id, "Нажми кнопку в меню 😊", reply_markup=main_menu())
 print("Бот запущен...")
 
 bot.polling()
