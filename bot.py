@@ -1,5 +1,6 @@
 import telebot
 import os
+import sqlite3
 from telebot import types
 from database import get_available_times, add_booking, confirm_booking, get_booking, get_next_7_days
 
@@ -252,6 +253,35 @@ def handle_callback(call):
 @bot.message_handler(func=lambda message: True)
 def echo(message):
     bot.send_message(message.chat.id, "Нажми кнопку в меню 😊", reply_markup=main_menu())
-
+    
+@bot.message_handler(commands=['admin'])
+def admin_panel(message):
+    if message.chat.id != OWNER_ID:
+        bot.send_message(message.chat.id, "У вас нет доступа.")
+        return
+    
+    conn = sqlite3.connect("salon.db")
+    c = conn.cursor()
+    c.execute("SELECT * FROM bookings WHERE status != 'cancelled' ORDER BY date, time")
+    bookings = c.fetchall()
+    conn.close()
+    
+    if not bookings:
+        bot.send_message(message.chat.id, "Записей пока нет.")
+        return
+    
+    for b in bookings:
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("❌ Отменить", callback_data=f"cancel_{b[0]}"))
+        status = "⏳ Ожидает" if b[8] == "pending" else "✅ Подтверждена"
+        bot.send_message(message.chat.id,
+        f"Запись №{b[0]}\n"
+        f"👤 {b[2]} ({b[3]})\n"
+        f"💅 {b[4]}\n"
+        f"👩 {b[5]}\n"
+        f"📅 {b[6]} в {b[7]}\n"
+        f"Статус: {status}",
+        reply_markup=markup)
 print("Бот запущен...")
+
 bot.polling()
